@@ -55,7 +55,7 @@ PARTUUID=$(blkid -s PARTUUID -o value ${disk})
 
 
 if [ $? -eq 0 ]; then
-	./limine_operatiions.sh $PARTUUID
+	./limine_operations.sh $PARTUUID
 	./efibootmgr_operations.sh
 else
     	echo "Uygun partition yolu gir.!
