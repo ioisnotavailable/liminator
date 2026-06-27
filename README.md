@@ -20,5 +20,11 @@ Tüm sorular doğru cevapllandığı takdirde işlem başarışı olarak gerçek
 
 
 
-İyi çalışmalar.
 
+
+
+
+
+
+
+_@ioisnotavailable_
