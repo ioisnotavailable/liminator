@@ -19,6 +19,7 @@ PARTUUID=$(blkid -s PARTUUID -o value ${disk})
 
 if [ $? -eq 0 ]; then
 	./kur.sh $PARTUUID
+	./efi.sh
 else
     	echo "Uygun partition yolu girin.!"
 	echo "ÖRN: /dev/sda1"
