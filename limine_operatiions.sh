@@ -14,3 +14,18 @@ echo "Limine konfigürasyonu oluşturuluyor..."
 #EOF
 
 echo "Konfigürasyon başarıyla yazıldı!"
+
+#mkdir -p /boot/EFI/arch-limine
+#cp /usr/share/limine/BOOTX64.EFI /boot/EFI/arch-limine/
+
+
+if [ $? -eq 0 ]; then
+	echo "BOOTX64.EFI dosyası başarıyla kopyalandı"
+	exit 0
+else
+    	echo "BOOTX64.EFT dosyasının kopyalanmasına bir hata meydana geldi."
+	exit 1
+fi
+
+
+

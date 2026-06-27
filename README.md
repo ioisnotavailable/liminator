@@ -10,6 +10,7 @@ Saf Arch Linux kurulumuda bootloader tercihini Limine Bootloader seçerseniz sad
 ## Gerekli programlar
 - limine
 - efibootmgr
+- vim/nano
 
 ## Kurulumu
 Repoyu klonladıktan sonra komutları yorum satırından çıkarmanız gerekmetedir.
