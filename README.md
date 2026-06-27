@@ -28,6 +28,4 @@ Tüm sorular doğru cevaplandığı takdirde işlem başarılı olarak gerçekle
 
 
 
-
-
 _@ioisnotavailable_
