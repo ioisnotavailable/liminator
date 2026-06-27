@@ -14,7 +14,9 @@ Saf Arch Linux kurulumuda bootloader tercihini Limine Bootloader'dan yana yapars
 
 ## Kurulumu
 Repoyu klonladıktan sonra komutları yorum satırından çıkarmanız gerekmetedir.
-Sonrasında `./install.sh` komutu ile kurulum başlar.
+Sonrasında 
+>`./install.sh` 
+komutu ile kurulum başlar.
 İlk olarak / (root) partitionunun yolunu soracaktır.
 Akabinde boot diskinin ve partitionun adını soracaktır.
 Tüm sorular doğru cevaplandığı takdirde işlem başarılı olarak gerçekleşecektir.
