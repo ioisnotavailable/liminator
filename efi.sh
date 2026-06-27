@@ -2,13 +2,13 @@
 
 
 echo "boot partitionunun bulunduğu diskin adını gir."
-echo "Örneğin: sd veya nvme0n1"
+echo "Örneğin: sda veya nvme0n1"
 echo ""
 read disk
 echo ""
 echo ""
 echo "boot partitionunun partition numarasını gir."
-echo "Örneğin: a veya p1"
+echo "Örneğin: 1 veya p1"
 echo ""
 read part
 
