@@ -10,12 +10,9 @@ echo ""
 read disk
 echo ""
 
-#disk=$1
 
 PARTUUID=$(blkid -s PARTUUID -o value ${disk})
-#echo $PARTUUID
 
-#./kur.sh $(blkid -s PARTUUID -o value ${disk})
 
 if [ $? -eq 0 ]; then
 	./kur.sh $PARTUUID
