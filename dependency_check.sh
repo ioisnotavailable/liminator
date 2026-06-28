@@ -1,29 +1,25 @@
 #!/bin/bash
 
-GEREKLI_PROGRAMLAR=("limine" "efibootmgr")
+check_dependencies() {
+    echo "Bağımlılıklar kontrol ediliyor..."
+    local dependencies=("limine" "efibootmgr" "blkid")
+    local missing_deps=()
 
-EKSIKLER=0
+    for dep in "${dependencies[@]}"; do
+        if ! command -v "$dep" &> /dev/null; then
+            missing_deps+=("$dep")
+        fi
+    done
 
-echo "Gereksinimler kontrol ediliyor..."
-echo "----------------------------------------"
-
-for PROGRAM in "${GEREKLI_PROGRAMLAR[@]}"; do
-    if command -v "$PROGRAM" > /dev/null 2>&1; then
-        echo "$PROGRAM yüklü."
-    else
-        echo "HATA: $PROGRAM bulunamadı!"
-        EKSIKLER=$((EKSIKLER + 1))
+    if [ ${#missing_deps[@]} -ne 0 ]; then
+        echo -e "\e[33mEksik bağımlılıklar tespit edildi: ${missing_deps[*]}\e[0m"
+        read -p "Eksik paketler otomatik olarak kurulsun mu? (e/H): " ins_choice
+        if [[ "$ins_choice" =~ ^[Ee]$ ]]; then
+            pacman -Sy --noconfirm "${missing_deps[@]}"
+        else
+            echo -e "\e[31mHata: Gerekli paketler olmadan kuruluma devam edilemez.\e[0m"
+            exit 1
+        fi
     fi
-done
-
-echo "----------------------------------------"
-
-if [ "$EKSIKLER" -gt 0 ]; then
-    echo "HATA: Çalışmaya başlamak için $EKSIKLER adet programı kurmanız gerekiyor."
-    exit 1 
-else
-    echo "Tüm gereksinimler karşılandı."
-    exit 0
-fi
-
-
+    echo -e "\e[32mTüm bağımlılıklar hazır.\e[0m"
+}

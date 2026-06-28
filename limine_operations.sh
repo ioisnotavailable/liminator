@@ -1,31 +1,43 @@
 #!/bin/bash
 
-ROOT_PARTUUID=$1 
-echo "Limine konfigürasyonu oluşturuluyor..."
+setup_limine() {
+    local efi_part=$1
+    local root_uuid=$2
 
-#cat <<EOF > /boot/limine.conf
-#timeout: 5
+    local efi_mount=$(lsblk -no MOUNTPOINT "$efi_part" | head -n 1 | tr -d '[:space:]')
+    
+    if [ -z "$efi_mount" ] || [ "$efi_mount" == "null" ]; then
+        echo "EFI bölümü bağlı görünmüyor. Geçici olarak /mnt/boot dizinine bağlanıyor..."
+        efi_mount="/mnt/boot"
+        mkdir -p "$efi_mount"
+        mount "$efi_part" "$efi_mount"
+    fi
 
-#/Arch Linux
-#    protocol: linux
-#    path: boot():/vmlinuz-linux
-#    module_path: boot():/initramfs-linux.img
-#    cmdline: root=PARTUUID=${ROOT_PARTUUID} rw
-#EOF
+    echo "Limine binary dosyaları EFI dizinine kopyalanıyor..."
+    mkdir -p "$efi_mount/EFI/limine"
+    
+    cp /usr/share/limine/BOOTX64.EFI "$efi_mount/EFI/limine/"
+    
+    if [ -f /usr/share/limine/limine-bios.sys ]; then
+        cp /usr/share/limine/limine-bios.sys "$efi_mount/EFI/limine/"
+    fi
 
-echo "Konfigürasyon başarıyla yazıldı!"
+    echo "Dinamik limine.conf dosyası UUID ile oluşturuluyor..."
+    cat << EOF > "$efi_mount/EFI/limine/limine.conf"
+timeout: 5
 
-#mkdir -p /boot/EFI/arch-limine
-#cp /usr/share/limine/BOOTX64.EFI /boot/EFI/arch-limine/
+/Arch Linux
+    protocol: linux
+    path: boot():/vmlinuz-linux
+    cmdline: root=UUID=$root_uuid rw
+    module_path: boot():/initramfs-linux.img
 
+/Arch Linux (Fallback)
+    protocol: linux
+    path: boot():/vmlinuz-linux
+    cmdline: root=UUID=$root_uuid rw
+    module_path: boot():/initramfs-linux-fallback.img
+EOF
 
-if [ $? -eq 0 ]; then
-	echo "BOOTX64.EFI dosyası başarıyla kopyalandı"
-	exit 0
-else
-    	echo "BOOTX64.EFT dosyasının kopyalanmasına bir hata meydana geldi."
-	exit 1
-fi
-
-
-
+    echo "Dosya transferi ve yapılandırma tamam."
+} 

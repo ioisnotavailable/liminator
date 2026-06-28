@@ -1,64 +1,78 @@
 #!/bin/bash
+set -e
 
-echo "	 	 
-┌──────────────────────────┐
-│▌  ▗     ▗       ▐        │
-│▌  ▄ ▛▚▀▖▄ ▛▀▖▝▀▖▜▀ ▞▀▖▙▀▖│
-│▌  ▐ ▌▐ ▌▐ ▌ ▌▞▀▌▐ ▖▌ ▌▌  │
-│▀▀▘▀▘▘▝ ▘▀▘▘ ▘▝▀▘ ▀ ▝▀ ▘  │
-└──────────────────────────┘
-"
-
-echo "Merhaba.
-Limine Yapılandırma Programına hoşgeldin.
-Çalışan sistemlerde yanlışlıkla çalıştırılıp sisteme zarar 
-vermemesi için komutlar yorum satırına alınarak kapatıldı.
-Programın çalışabilmesi için efibootmgr_operations.sh ve 
-limine_operations.sh dosyalarında bulunan '#' karakterlerini sil.
-(İlk satırda bulunanlar hariç.)
-
-
-"
-read -p "Gerekli düzenlemeleri yaptın mı? (e/h): " cevap
-
-if [ "$cevap" == "e" ]; then
-	echo ""
-elif [ "$cevap" == "h" ]; then
-    echo "İşlem iptal edildi."
-    exit 0 
-else
-    echo "Geçersiz bir tuşa bastın. Lütfen sadece 'e' veya 'h' gir."
-    exit 1 
+if [ "$EUID" -ne 0 ]; then
+    echo -e "\e[31mHata: Lütfen bu scripti root yetkisiyle (sudo) çalıştırın.\e[0m"
+    exit 1
 fi
 
-
-./dependency_check.sh
-
-if [ $? -eq 0 ]; then
-	echo ""
-else
-	exit 1
+if [ ! -d /sys/firmware/efi ]; then
+    echo -e "\e[31mHata: Sistem UEFI modunda boot edilmemiş! Bu script yalnızca UEFI sistemler içindir.\e[0m"
+    exit 1
 fi
 
+source ./dependency_check.sh
+source ./efibootmgr_operations.sh
+source ./limine_operations.sh
 
-echo "
+echo -e "\e[34m=== Limine Bootloader Otomatik Kurulum Scripti ===\e[0m"
 
-'/' (root) klasörünün partition yolunu gir.!
-Örneğin /dev/sda1
+check_dependencies
 
-"
-read -p " > " disk
-echo "
-"
+echo -e "\n\e[32mMevcut diskler ve bölümler:\e[0m"
+lsblk -o NAME,FSTYPE,SIZE,MOUNTPOINT
 
-PARTUUID=$(blkid -s PARTUUID -o value ${disk})
+echo -e "\nLütfen boot yükleyicisinin kurulacağı ana diski seçin:"
+disks=($(lsblk -dno NAME))
+select disk in "${disks[@]}"; do
+    if [ -n "$disk" ]; then
+        TARGET_DISK="/dev/$disk"
+        break
+    else
+        echo "Geçersiz seçim, lütfen tekrar deneyin."
+    fi
+done
 
+echo -e "\nLütfen Kök (/) partition yolunu seçin:"
+partitions=($(lsblk -plno NAME))
+select part in "${partitions[@]}"; do
+    if [ -n "$part" ]; then
+        ROOT_PART="$part"
+        break
+    else
+        echo "Geçersiz seçim."
+    fi
+done
 
-if [ $? -eq 0 ]; then
-	./limine_operations.sh $PARTUUID
-	./efibootmgr_operations.sh
-else
-    	echo "Uygun partition yolu gir.!
-Örneğin  /dev/sda1"
-	exit 1
+echo -e "\nLütfen EFI (ESP) partition yolunu seçin (Örn: /boot veya /boot/efi dizininin bağlı olduğu bölüm):"
+select esp_part in "${partitions[@]}"; do
+    if [ -n "$esp_part" ]; then
+        EFI_PART="$esp_part"
+        break
+    else
+        echo "Geçersiz seçim."
+    fi
+done
+
+ROOT_UUID=$(blkid -s UUID -o value "$ROOT_PART")
+if [ -z "$ROOT_UUID" ]; then
+    echo -e "\e[31mHata: Kök dizinin UUID değeri alınamadı!\e[0m"
+    exit 1
 fi
+
+echo -e "\n\e[33m--- YAPILANDIRMA ÖZETİ ---\e[0m"
+echo "Hedef Disk:      $TARGET_DISK"
+echo "Kök Bölümü:      $ROOT_PART (UUID: $ROOT_UUID)"
+echo "EFI Bölümü:      $EFI_PART"
+echo -e "\e[33m--------------------------\e[0m"
+read -p "Bu ayarlarla diske yazma işlemine devam edilsin mi? (e/H): " confirm
+
+if [[ ! "$confirm" =~ ^[Ee]$ ]]; then
+    echo "İşlem kullanıcı tarafından iptal edildi."
+    exit 0
+fi
+
+setup_limine "$EFI_PART" "$ROOT_UUID"
+create_efi_entry "$TARGET_DISK" "$EFI_PART"
+
+echo -e "\n\e[32m[ BAŞARILI ] Limine Bootloader kurulumu tamamlandı!\e[0m"
