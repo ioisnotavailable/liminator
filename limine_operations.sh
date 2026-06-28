@@ -31,12 +31,6 @@ timeout: 5
     path: boot():/vmlinuz-linux
     cmdline: root=UUID=$root_uuid rw
     module_path: boot():/initramfs-linux.img
-
-/Arch Linux (Fallback)
-    protocol: linux
-    path: boot():/vmlinuz-linux
-    cmdline: root=UUID=$root_uuid rw
-    module_path: boot():/initramfs-linux-fallback.img
 EOF
 
     echo "Dosya transferi ve yapılandırma tamam."
